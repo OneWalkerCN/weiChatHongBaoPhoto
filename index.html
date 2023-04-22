@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<style>
+	@font-face {
+		font-family:wechatSans;
+		src:url("https://images.orangejuice.top/fonts/WeChatSansStd-Bold.ttf");
+	}
+	h1{
+		
+		font-size: 56;
+		color: gold;
+		text-align: center;
+	}
+	#target{
+		margin: 10px;
+		padding-top: 150px;
+		font-size: 80px;
+		font-family: wechatSans;
+		font-weight: 50;
+		color: #f9d3a6;
+		height: 350px;
+		text-align: center;	
+	}
+	#bg{
+		margin: 10px;
+		height: 400px;
+		background-color: #f45f4d;
+	}
+	input{
+		margin-left: 10px;
+	}
+	#model{
+		border: lightslategray 1px solid;
+		border-radius: 20px;
+		padding: 10px;
+		width:450px;
+	}
+	#tip{
+		font-size: small;
+	}
+	#yuan{
+		font-size:large;
+	}
+	#tucao{
+		font-size: x-small;
+		
+	}
+</style>	
+<div id="model">
+	<div>
+		<input id="input" placeholder="对我输入金额（例：100.00）" />
+		<button onclick="downloadHandler()">生成&下载</button><span id="tip"> ❗金额最大7位,小数点占1</span>
+		<br>
+		<input type="radio" name="type" id="option1" checked="checked">￥+数字</input>
+		<input type="radio" name="type" id="option2">数字+元</input>
+	</div>
+	<hr/>
+	<div id="bg">
+		<div id="target">
+			啥都没有?
+		</div>
+	</div>
+	<hr/>
+	<span id="tucao">-tucao-</span>
+	
+</div>
+<script type="text/javascript">
+	const Type = {
+	    null: 0,
+	    toomuch: 1,
+	    tucao: 2
+	}
+	var downloadHandler = function(){
+		var num = document.getElementById("input").value;
+		if(num!="" && !isNaN(num)){
+			if(num.length<8){
+				//根据length自适应
+				adaptSize(num.length);
+				//num = parseFloat(num).toFixed(2);
+				if(document.getElementById("option1").checked){
+					document.getElementById("target").innerText = "￥"+num;
+				}
+				if(document.getElementById("option2").checked){
+					document.getElementById("target").innerHTML = num + '<span id="yuan">元</span>';
+				}
+				gen2down(num);  
+				tucao();
+			}
+			else{
+				inputTooMuch();
+			}
+		}else{
+			inputNull();
+		}
+	}
+
+	var adaptSize = function(length){
+		var target = document.getElementById("target");
+		// length<=3 font-size: 150px; padding-top: 80px;
+		if(length<=3){
+			target.style = "font-size: 150px; padding-top: 80px;";
+		// 6>length>3 font-size: 100px; padding-top: 130px;
+		}else if(length<6){
+			target.style = "font-size: 100px; padding-top: 110px;";
+		// length>6 default font-size: 80px; padding-top: 150px;
+		}else{
+			target.style = "font-size: 80px; padding-top: 130px;";
+		}
+	}
+	var gen2down = function(num){
+		//创建一个新的canvas
+		var canvas2 = document.createElement("canvas");
+		let _canvas = document.querySelector('#target');
+		var w = parseInt(window.getComputedStyle(_canvas).width);
+		var h = parseInt(window.getComputedStyle(_canvas).height);
+		//将canvas画布放大若干倍，然后盛放在较小的容器内，就显得不模糊了
+		canvas2.width = w * 2;
+		canvas2.height = h * 2;
+		canvas2.style.width = w + "px";
+		canvas2.style.height = h + "px";
+		//可以按照自己的需求，对context的参数修改,translate指的是偏移量
+		//  var context = canvas.getContext("2d");
+		//  context.translate(0,0);
+		var context = canvas2.getContext("2d");
+		context.scale(2, 2.1);
+		context.translate(0,-0.5);
+		html2canvas(document.querySelector('#target'), { canvas: canvas2,backgroundColor:null }).then(function(canvas) {
+		    //canvas转换成url，然后利用a标签的download属性，直接下载，绕过上传服务器再下载
+			var imgUri = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream"); // 获取生成的图片的url
+			var fileName = num+".png";
+			var link = document.createElement('a');
+			    link.setAttribute('download', fileName);
+			    link.setAttribute('href', imgUri);
+			    link.click();
+		});
+	}
+	var inputNull = function(){
+		document.getElementById("target").innerText = stringKeeper(Type.null);
+	}
+	var inputTooMuch = function(){
+		document.getElementById("target").innerText = stringKeeper(Type.toomuch);
+	}
+	var tucao = function(){
+		document.getElementById("tucao").innerText = '-'+stringKeeper(Type.tucao)+'-';
+	}
+	//集中处理语料
+	var stringKeeper = function(type){
+		var nullArray=["这是数字？","有病？","脑子还在？","啊？","...","清醒一点！","懂人言否？","数字！啊！","这有数字？"];
+		var tooMuchArray=["太贪心也不好","你有这么多钱？","富哥V50","很难撑","这不合理吧","这也不合适吧"];
+		var tucaoArray=["希望你真有这么多钱！","能不能分我点？","这数字有什么含义？","希望你玩的愉快😀！","感谢使用😊！喜欢请点赞！"];
+		var types = [nullArray,tooMuchArray,tucaoArray];
+		//限制在10句话之内
+		var index = Math.floor(Math.random()*10+1)%types[type].length;
+		return types[type][index];
+	}
+</script>
